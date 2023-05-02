@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import com.example.numbersaddinggame.R
 import com.example.numbersaddinggame.databinding.FragmentGameBinding
 import com.example.numbersaddinggame.databinding.FragmentGameFinishedBinding
+import com.example.numbersaddinggame.domain.entity.GameResult
+import com.example.numbersaddinggame.domain.entity.GameSettings
 import com.example.numbersaddinggame.domain.entity.Level
 
 class GameFragment : Fragment() {
@@ -30,6 +32,20 @@ class GameFragment : Fragment() {
         parseArgs()
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.tvSum.setOnClickListener {
+            launchGameFinishedFragment(gameResult =
+            GameResult(true,20,40, GameSettings(10,2,5,40)))
+        }
+    }
+
+    private fun launchGameFinishedFragment(gameResult: GameResult){
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.main_container, GameFinishedFragment.newInstance(gameResult))
+            .addToBackStack(GameFinishedFragment.NAME)
+            .commit()
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -40,6 +56,7 @@ class GameFragment : Fragment() {
 
     companion object{
         private const val KEY_LEVEL = "level"
+        const val NAME = "GameFragment"
         fun newInstance(level: Level): GameFragment{
             return GameFragment().apply {
                 arguments = Bundle().apply {
