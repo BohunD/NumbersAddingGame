@@ -1,10 +1,14 @@
 package com.example.numbersaddinggame.presentation
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import com.example.numbersaddinggame.R
 import com.example.numbersaddinggame.databinding.FragmentGameBinding
 import com.example.numbersaddinggame.databinding.FragmentGameFinishedBinding
@@ -18,6 +22,21 @@ class GameFragment : Fragment() {
         get() = _binding?: throw java.lang.RuntimeException("FragmentGameBinding == null")
 
     private lateinit var level: Level
+    private val tvOptions  by lazy{
+        mutableListOf<TextView>().apply {
+            this.add(binding.tvOptionOne)
+            this.add(binding.tvOptionTwo)
+            this.add(binding.tvOptionThree)
+            this.add(binding.tvOptionFour)
+            this.add(binding.tvOptionFive)
+            this.add(binding.tvOptionSix)
+        }
+    }
+    private val viewModel: GameViewModel by lazy{
+        ViewModelProvider(this, ViewModelProvider
+            .AndroidViewModelFactory
+            .getInstance(requireActivity().application))[GameViewModel::class.java]
+    }
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -27,6 +46,43 @@ class GameFragment : Fragment() {
         return binding.root
     }
 
+    private fun observeViewModel(){
+        viewModel.question.observe(viewLifecycleOwner){
+            with(binding){
+                tvSum.text = it.sum.toString()
+                tvNumLeft.text = it.visibleNumber.toString()
+                for(i in 0 until tvOptions.size){
+                    tvOptions[i].text = it.options[i].toString()
+                }
+            }
+        }
+        viewModel.percentOfRightAnswers.observe(viewLifecycleOwner){
+            binding.progressBar.setProgress(it,true)
+        }
+        viewModel.progressAnswers.observe(viewLifecycleOwner){
+            binding.tvCorrectAnswers.text = it
+        }
+        viewModel.enoughCountOfRightAnswers.observe(viewLifecycleOwner){
+            binding.tvCorrectAnswers.setTextColor(getColorByState(it))
+        }
+        viewModel.enoughPercentOfRightAnswers.observe(viewLifecycleOwner) {
+            val color = getColorByState(it)
+            binding.progressBar.progressTintList = ColorStateList.valueOf(color)
+        }
+        viewModel.formattedTime.observe(viewLifecycleOwner){
+            binding.tvTimer.text = it
+        }
+        viewModel.gameResult.observe(viewLifecycleOwner){
+            launchGameFinishedFragment(it)
+        }
+    }
+
+    private fun getColorByState(state: Boolean): Int{
+        val colorResId = if(state){
+            android.R.color.holo_green_light
+        }else android.R.color.holo_red_light
+        return  ContextCompat.getColor(requireContext(), colorResId)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         parseArgs()
@@ -34,9 +90,16 @@ class GameFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.tvSum.setOnClickListener {
-            launchGameFinishedFragment(gameResult =
-            GameResult(true,20,40, GameSettings(10,2,5,40)))
+        observeViewModel()
+        setClickListenersToOptions()
+        viewModel.startGame(level)
+    }
+
+    private fun setClickListenersToOptions(){
+        for(tvOption in tvOptions){
+            tvOption.setOnClickListener {
+                viewModel.chooseAnswer(tvOption.text.toString().toInt())
+            }
         }
     }
 

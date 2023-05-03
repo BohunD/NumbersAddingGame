@@ -4,6 +4,8 @@ import com.example.numbersaddinggame.domain.entity.GameSettings
 import com.example.numbersaddinggame.domain.entity.Level
 import com.example.numbersaddinggame.domain.entity.Question
 import com.example.numbersaddinggame.domain.repository.GameRepository
+import java.lang.Integer.max
+import java.lang.Math.min
 import kotlin.random.Random
 
 object GameRepositoryImpl: GameRepository {
@@ -15,8 +17,8 @@ object GameRepositoryImpl: GameRepository {
         val options = HashSet<Int>()
         val rightAnswer = sum-visibleNumber
         options.add(rightAnswer)
-        val from = Integer.max(rightAnswer - countOfOptions, MIN_ANSWER_VALUE)
-        val to = Math.min(maxSumValue - 1, rightAnswer + countOfOptions)
+        val from = max(rightAnswer - countOfOptions, MIN_ANSWER_VALUE)
+        val to = min(maxSumValue-1, rightAnswer+countOfOptions)
         while(options.size<countOfOptions)
             options.add(Random.nextInt(from, to))
         return Question(sum, visibleNumber,options.toList())
