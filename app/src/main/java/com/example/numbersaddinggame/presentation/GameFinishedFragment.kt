@@ -1,17 +1,14 @@
 package com.example.numbersaddinggame.presentation
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import com.example.numbersaddinggame.R
-import com.example.numbersaddinggame.databinding.FragmentChooseLevelBinding
 import com.example.numbersaddinggame.databinding.FragmentGameFinishedBinding
 import com.example.numbersaddinggame.domain.entity.GameResult
-import com.example.numbersaddinggame.domain.entity.GameSettings
 
 class GameFinishedFragment : Fragment() {
     private var _binding: FragmentGameFinishedBinding? = null
@@ -41,6 +38,7 @@ class GameFinishedFragment : Fragment() {
                 retryGame()
             }
         })
+        bindViews()
         binding.buttonRetry.setOnClickListener { retryGame() }
     }
 
@@ -54,7 +52,34 @@ class GameFinishedFragment : Fragment() {
              gameResult = it
          }
     }
+    private fun bindViews(){
 
+        binding.ivEmojiResult.setImageResource(getSmileResId())
+        binding.tvRequiredAnswers.text = String.format(getString(R.string.finish_required_correct),
+            gameResult.gameSettings.minCountOfRightAnswers.toString())
+        binding.tvYourScore.text = String.format(getString(R.string.finish_your_score),
+            gameResult.countOfRightAnswers.toString())
+        binding.tvRequiredPercentage.text = String.format(getString(R.string.finish_required_percent),
+            gameResult.gameSettings.minPercentOfRightAnswers.toString())
+        binding.tvScorePercentage.text = String.format(getString(R.string.finish_your_percent),
+            getPercentOfCorrectAnswers().toString())
+
+    }
+
+    private fun getPercentOfCorrectAnswers()= with(gameResult){
+        if( countOfQuestions ==0 ){
+            0
+        }
+        else{
+            (countOfRightAnswers / ((countOfQuestions.toDouble()) ) * 100).toInt()
+        }
+    }
+    private fun getSmileResId(): Int{
+        val res = if(gameResult.winner) {
+            R.drawable.emoji_good
+        }else R.drawable.emoji_bad
+        return res
+    }
     private fun retryGame(){
         requireActivity().supportFragmentManager.popBackStack(GameFragment.NAME, 1)
     }
