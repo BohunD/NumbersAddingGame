@@ -99,12 +99,14 @@ class GameViewModel(
         generateQuestion()
     }
 
-    private fun checkAnswer(number: Int){
+    private fun checkAnswer(number: Int):Boolean {
         val rightAnswer = question.value?.rightAnswer
+        countOfQuestions++
         if(number == rightAnswer){
             countOfRightAnswers++
+            return true
         }
-        countOfQuestions++
+        return false
     }
 
     override fun onCleared() {

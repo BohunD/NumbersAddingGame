@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.example.numbersaddinggame.R
 import com.example.numbersaddinggame.databinding.FragmentGameBinding
 import com.example.numbersaddinggame.databinding.FragmentGameFinishedBinding
@@ -21,7 +23,6 @@ class GameFragment : Fragment() {
     private val binding: FragmentGameBinding
         get() = _binding?: throw java.lang.RuntimeException("FragmentGameBinding == null")
 
-    private lateinit var level: Level
     private val tvOptions  by lazy{
         mutableListOf<TextView>().apply {
             this.add(binding.tvOptionOne)
@@ -33,8 +34,10 @@ class GameFragment : Fragment() {
         }
     }
 
+    private val args by navArgs<GameFragmentArgs>()
+
     private val viewModelFactory by lazy{
-        GameViewModelFactory(level, requireActivity().application)
+        GameViewModelFactory(args.level, requireActivity().application)
     }
 
     private val viewModel: GameViewModel by lazy{
@@ -61,6 +64,7 @@ class GameFragment : Fragment() {
         }
         viewModel.percentOfRightAnswers.observe(viewLifecycleOwner){
             binding.progressBar.setProgress(it,true)
+
         }
         viewModel.progressAnswers.observe(viewLifecycleOwner){
             binding.tvCorrectAnswers.text = it
@@ -68,6 +72,7 @@ class GameFragment : Fragment() {
         viewModel.enoughCountOfRightAnswers.observe(viewLifecycleOwner){
             binding.tvCorrectAnswers.setTextColor(getColorByState(it))
         }
+
         viewModel.enoughPercentOfRightAnswers.observe(viewLifecycleOwner) {
             val color = getColorByState(it)
             binding.progressBar.progressTintList = ColorStateList.valueOf(color)
@@ -88,7 +93,6 @@ class GameFragment : Fragment() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        parseArgs()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -107,30 +111,14 @@ class GameFragment : Fragment() {
     }
 
     private fun launchGameFinishedFragment(gameResult: GameResult){
-        requireActivity().supportFragmentManager.beginTransaction()
-            .replace(R.id.main_container, GameFinishedFragment.newInstance(gameResult))
-            .addToBackStack(GameFinishedFragment.NAME)
-            .commit()
+        findNavController().navigate(
+            GameFragmentDirections.actionGameFragmentToGameFinishedFragment(gameResult)
+        )
     }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-    private fun parseArgs(){
-         requireArguments().getParcelable<Level>(KEY_LEVEL)?.let {
-             level = it
-         }
-    }
 
-    companion object{
-        private const val KEY_LEVEL = "level"
-        const val NAME = "GameFragment"
-        fun newInstance(level: Level): GameFragment{
-            return GameFragment().apply {
-                arguments = Bundle().apply {
-                    putParcelable(KEY_LEVEL, level)
-                }
-            }
-        }
-    }
+
 }
